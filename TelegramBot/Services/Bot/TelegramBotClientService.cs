@@ -1,22 +1,34 @@
-﻿using Telegram.Bot;
+﻿using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+using Telegram.Bot;
 using Telegram.Bot.Exceptions;
 using Telegram.Bot.Polling;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
-using Telegram.Bot.Types.ReplyMarkups;
+using TelegramBot.Extensions;
+using TelegramBot.Settings;
 
 namespace TelegramBot.Services.Bot;
 
-public class TgBot : ITgBot
+public class TelegramBotClientService : ITelegramBotClientService
 {
+    private readonly ILogger<TelegramBotClientService> _logger;
     private readonly TelegramBotClient _botClient;
     private readonly CancellationTokenSource _botCancelToken;
+    private readonly ManualResetEvent _botStoppedEvent = new(false);
     
-    // TODO Add dependencies
-    public TgBot()
+    public TelegramBotClientService(ILogger<TelegramBotClientService> logger, IOptions<TelegramBotSettings> telegramOptions)
     {
-        // TODO Get token from env
-        _botClient = new TelegramBotClient("5618597824:AAHXbCtNZTMyQQgT3sSA40KBmz0IlmQ25SE");
+        var telegramBotToken = telegramOptions.Value.BotToken;
+
+        if (string.IsNullOrWhiteSpace(telegramBotToken))
+        {
+            logger.LogCritical("Telegram Bot token is not provided!");
+            throw new InvalidOperationException();
+        }
+        
+        _logger = logger;
+        _botClient = new TelegramBotClient(telegramBotToken);
         _botCancelToken = new CancellationTokenSource();
     }
     
@@ -27,12 +39,18 @@ public class TgBot : ITgBot
             AllowedUpdates = Array.Empty<UpdateType>()
         };
         
-        _botClient.StartReceiving(
-            updateHandler: HandleUpdateAsync,
-            pollingErrorHandler: HandlePollingErrorAsync,
-            receiverOptions: receiverOptions,
-            cancellationToken: _botCancelToken.Token
+        _botClient.StartReceivingNotifiable(
+            new DefaultUpdateHandler(HandleUpdateAsync, HandlePollingErrorAsync),
+            receiverOptions,
+            _botCancelToken.Token,
+            _botStoppedEvent
         );
+    }
+
+    public void Stop()
+    {
+        _botCancelToken.Cancel();
+        _botStoppedEvent.WaitOne();
     }
 
     private async Task HandlePollingErrorAsync(ITelegramBotClient client, Exception exception, CancellationToken cancellationToken)
@@ -60,7 +78,7 @@ public class TgBot : ITgBot
         
         var chatId = message.Chat.Id;
         
-        Console.WriteLine($"Received a '{messageText}' message in chat {chatId}.");
+        _logger.LogInformation(@"Received a '{MessageText}' message in chat {ChatId}", messageText, chatId);
         
         // Echo received message text
         // var sentMessage = await _botClient.SendTextMessageAsync(

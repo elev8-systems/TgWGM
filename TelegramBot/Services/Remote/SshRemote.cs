@@ -1,5 +1,4 @@
 ﻿using System.Collections.Immutable;
-using System.Diagnostics;
 using Renci.SshNet;
 
 namespace TelegramBot.Services.Remote;
@@ -12,11 +11,6 @@ public class SshRemote : IRemoteService
     public IReadOnlyDictionary<string, bool> Statuses =>
         _clients.ToImmutableDictionary(pair => pair.Key, pair => pair.Value.IsConnected);
 
-    public SshRemote()
-    {
-        
-    }
-    
     public void Init()
     {
         
