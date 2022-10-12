@@ -1,17 +1,20 @@
 ﻿using System.Collections.Immutable;
+using Microsoft.Extensions.Logging;
 using Renci.SshNet;
+using TelegramBot.Services.Remote.Ssh;
 
 namespace TelegramBot.Services.Remote;
 
 public class SshRemote : IRemoteService
 {
-    private readonly Dictionary<string, ConnectionInfo> _connectionInfos = new();
-    private readonly Dictionary<string, SshClient> _clients = new();
+    private readonly ILogger<SshRemote> _logger;
 
-    public IReadOnlyDictionary<string, bool> Statuses =>
-        _clients.ToImmutableDictionary(pair => pair.Key, pair => pair.Value.IsConnected);
+    public SshRemote(ILogger<SshRemote> logger)
+    {
+        _logger = logger;
+    }
 
-    public void Init()
+    public void Run()
     {
         
     }

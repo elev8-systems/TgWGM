@@ -2,9 +2,8 @@
 
 public interface IRemoteService
 {
-    void Init();
+    void Run();
     void PushConfig();
     void AddPeer();
     void RemovePeer();
-    IReadOnlyDictionary<string, bool> Statuses { get; }
 }

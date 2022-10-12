@@ -6,4 +6,5 @@ namespace TelegramBot.Settings;
 public class TelegramBotSettings
 {
     public string? BotToken { get; set; }
+    public long AdminChatId { get; set; }
 }

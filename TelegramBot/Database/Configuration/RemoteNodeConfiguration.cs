@@ -15,7 +15,7 @@ public class RemoteNodeConfiguration : IEntityTypeConfiguration<RemoteNode>
         entity.Property(e => e.Host).IsRequired();
         entity.Property(e => e.Port).IsRequired();
         entity.Property(e => e.User).HasMaxLength(256).IsRequired();
-        entity.Property(e => e.HostKey).IsRequired();
+        entity.Property(e => e.HostKeys).IsRequired();
         entity.Property(e => e.CountryCode).HasMaxLength(32).IsRequired();
         entity.Property(e => e.DisplayName).HasMaxLength(256).IsRequired();
     }

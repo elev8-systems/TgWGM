@@ -8,15 +8,23 @@ using TelegramBot.Database;
 using TelegramBot.HostedServices;
 using TelegramBot.Services.Bot;
 using TelegramBot.Services.Database;
+using TelegramBot.Services.Remote;
+using TelegramBot.Services.Remote.Ssh;
 using TelegramBot.Settings;
 
 // Entry point for ARNetManage
 
 // Logging
 
-var rootLogger = new LoggerConfiguration()
-    .WriteTo.Console(outputTemplate: "[{Timestamp:HH:mm:ss}] [{Level:u3}] [{SourceContext}] {Message:lj}{NewLine}{Exception}")
-    .CreateLogger();
+var rootLoggerBuilder = new LoggerConfiguration()
+    .WriteTo.Console(outputTemplate: "[{Timestamp:HH:mm:ss}] [{Level:u3}] [{SourceContext}] {Message:lj}{NewLine}{Exception}");
+
+if (Environment.GetEnvironmentVariable("DOTNET_ENVIRONMENT") == "Development")
+{
+    rootLoggerBuilder.MinimumLevel.Debug();
+}
+
+var rootLogger = rootLoggerBuilder.CreateLogger();
 
 // Generic host configuration
 
@@ -37,6 +45,7 @@ var host = Host.CreateDefaultBuilder(args)
         // Services
         services.AddSingleton<IDatabaseMigratorService, DatabaseMigratorService>();
         services.AddSingleton<ITelegramBotClientService, TelegramBotClientService>();
+        services.AddSingleton<IRemoteService, SshRemote>();
         
         // Database
         services.AddDbContextFactory<MainContext>(config =>
